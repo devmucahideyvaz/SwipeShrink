@@ -1,6 +1,8 @@
 # SwipeShrink
 Swipe shrink view like Youtube Video Player
 
+![](swipe_shrink.gif)
+
 # Installation
 Just add SwipeShrink.swift file to your project
 
