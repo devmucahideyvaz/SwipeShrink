@@ -5,7 +5,6 @@ let package = Package(
     name: "SwipeShrink",
     platforms: [
         .iOS(.v13),
-        .tvOS(.v13),
         // macOS is supported so the geometry can be unit tested with `swift test`;
         // the UIKit driver is compiled out there.
         .macOS(.v10_15)

@@ -16,7 +16,7 @@ Both are driven by the same `SwipeShrinkGeometry`, so they cannot drift apart.
 
 ## Requirements
 
-- iOS 13.0+ / tvOS 13.0+
+- iOS 13.0+
 - Swift 6.0+ (Xcode 16+); builds in Swift 6 language mode with complete strict
   concurrency checking
 - No third-party dependencies

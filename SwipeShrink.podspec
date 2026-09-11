@@ -12,7 +12,6 @@ Pod::Spec.new do |s|
   s.author           = { 'Mücahid Eyvaz' => 'mchd.eyvz@gmail.com' }
   s.source           = { :git => 'https://github.com/devmucahideyvaz/SwipeShrink.git', :tag => s.version.to_s }
   s.ios.deployment_target = '13.0'
-  s.tvos.deployment_target = '13.0'
   s.swift_versions   = ['6.0']
   s.default_subspecs = ['Core']
 

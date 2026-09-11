@@ -49,7 +49,7 @@ private let predictedEndInterval: CGFloat = 0.25
 ///
 /// - Note: The transition maths is shared with the UIKit `SwipeShrink` — both
 ///   are driven by `SwipeShrinkGeometry`, so the two behave identically.
-@available(iOS 14.0, tvOS 14.0, macOS 11.0, *)
+@available(iOS 14.0, macOS 11.0, *)
 @MainActor
 public struct SwipeShrinkView<Content: View>: View {
 
@@ -159,7 +159,7 @@ public struct SwipeShrinkView<Content: View>: View {
     }
 
     private func verticalVelocity(of value: DragGesture.Value) -> CGFloat {
-        if #available(iOS 17.0, tvOS 17.0, macOS 14.0, *) {
+        if #available(iOS 17.0, macOS 14.0, *) {
             return value.velocity.height
         }
         // Older systems only expose where the drag is predicted to land, so
@@ -169,7 +169,7 @@ public struct SwipeShrinkView<Content: View>: View {
 }
 
 #if DEBUG
-@available(iOS 14.0, tvOS 14.0, macOS 11.0, *)
+@available(iOS 14.0, macOS 11.0, *)
 struct SwipeShrinkView_Previews: PreviewProvider {
     private struct Demo: View {
         @State private var state: SwipeShrinkState = .expanded
