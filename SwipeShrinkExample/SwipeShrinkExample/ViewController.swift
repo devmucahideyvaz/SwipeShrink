@@ -13,25 +13,62 @@ import UIKit
 public class ViewController: UIViewController {
     @IBOutlet weak var shrinkedView: UIView!
 
-    private let shrink: SwipeShrink = SwipeShrink()
+    private let shrink = SwipeShrink()
+    private let player = AVPlayer()
+    private let playerViewController = AVPlayerViewController()
 
-    private let player: AVPlayer = AVPlayer()
-    private let playerViewController: AVPlayerViewController = AVPlayerViewController()
+    private var hasPreparedShrink = false
 
     public override func viewDidLoad() {
         super.viewDidLoad()
-        let url: URL = Bundle.main.url(forResource: "bayw-HD", withExtension: "mp4")!
-        player.replaceCurrentItem(with: AVPlayerItem(url: url))
-        playerViewController.player = player
-        playerViewController.willMove(toParent: self)
-        addChild(playerViewController)
-        shrinkedView.addSubview(playerViewController.view)
-        playerViewController.didMove(toParent: self)
-        playerViewController.view.snp.makeConstraints({ $0.edges.equalToSuperview() })
+        embedPlayer()
+        loadVideo()
     }
 
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        shrink.prepare(shrinkedView, view)
+        // `prepare` needs the final laid-out frames, which are only settled by
+        // the time the view has appeared. It is idempotent, but there is no
+        // reason to redo the work on every appearance.
+        guard !hasPreparedShrink else { return }
+        hasPreparedShrink = true
+        shrink.prepare(view: shrinkedView, in: view)
+    }
+
+    public override func viewWillTransition(to size: CGSize,
+                                            with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate(alongsideTransition: { [weak self] _ in
+            guard let self = self else { return }
+            // `shrinkedView` is positioned by a fixed frame in the storyboard,
+            // so hand SwipeShrink the expanded frame for the new size instead
+            // of letting it read a stale one.
+            self.shrink.updateLayout(expandedFrame: self.expandedPlayerFrame(forParentSize: size))
+        })
+    }
+
+    /// Full-width, 16:9, tucked under the status bar.
+    private func expandedPlayerFrame(forParentSize size: CGSize) -> CGRect {
+        let top = view.safeAreaInsets.top
+        return CGRect(x: 0, y: top, width: size.width, height: size.width * 9 / 16)
+    }
+
+    private func embedPlayer() {
+        playerViewController.player = player
+        addChild(playerViewController)
+        // Pinned with an autoresizing mask rather than constraints so the
+        // player tracks `shrinkedView` as SwipeShrink resizes it.
+        playerViewController.view.frame = shrinkedView.bounds
+        playerViewController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        shrinkedView.addSubview(playerViewController.view)
+        playerViewController.didMove(toParent: self)
+    }
+
+    private func loadVideo() {
+        guard let url = Bundle.main.url(forResource: "bayw-HD", withExtension: "mp4") else {
+            assertionFailure("Sample video is missing from the app bundle.")
+            return
+        }
+        player.replaceCurrentItem(with: AVPlayerItem(url: url))
     }
 }

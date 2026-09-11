@@ -13,7 +13,7 @@
 		C17205EC24B8EE400058A6A6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C17205EB24B8EE400058A6A6 /* Assets.xcassets */; };
 		C17205EF24B8EE400058A6A6 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C17205ED24B8EE400058A6A6 /* LaunchScreen.storyboard */; };
 		C17205F724B8EE740058A6A6 /* SwipeShrink.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17205F624B8EE740058A6A6 /* SwipeShrink.swift */; };
-		C17205FA24B8F5680058A6A6 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = C17205F924B8F5680058A6A6 /* SnapKit */; };
+		C17205F924B8EE740058A6A6 /* SwipeShrinkGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17205F824B8EE740058A6A6 /* SwipeShrinkGeometry.swift */; };
 		C17205FC24B8FC070058A6A6 /* bayw-HD.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = C17205FB24B8F8670058A6A6 /* bayw-HD.mp4 */; };
 /* End PBXBuildFile section */
 
@@ -25,7 +25,8 @@
 		C17205EB24B8EE400058A6A6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C17205EE24B8EE400058A6A6 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		C17205F024B8EE400058A6A6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		C17205F624B8EE740058A6A6 /* SwipeShrink.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwipeShrink.swift; sourceTree = "<group>"; };
+		C17205F624B8EE740058A6A6 /* SwipeShrink.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SwipeShrink.swift; path = ../../Sources/SwipeShrink/SwipeShrink.swift; sourceTree = "<group>"; };
+		C17205F824B8EE740058A6A6 /* SwipeShrinkGeometry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SwipeShrinkGeometry.swift; path = ../../Sources/SwipeShrink/SwipeShrinkGeometry.swift; sourceTree = "<group>"; };
 		C17205FB24B8F8670058A6A6 /* bayw-HD.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "bayw-HD.mp4"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -34,7 +35,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C17205FA24B8F5680058A6A6 /* SnapKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -64,6 +64,7 @@
 				C17205E624B8EE3D0058A6A6 /* ViewController.swift */,
 				C17205FB24B8F8670058A6A6 /* bayw-HD.mp4 */,
 				C17205F624B8EE740058A6A6 /* SwipeShrink.swift */,
+				C17205F824B8EE740058A6A6 /* SwipeShrinkGeometry.swift */,
 				C17205E824B8EE3D0058A6A6 /* Main.storyboard */,
 				C17205EB24B8EE400058A6A6 /* Assets.xcassets */,
 				C17205ED24B8EE400058A6A6 /* LaunchScreen.storyboard */,
@@ -88,9 +89,6 @@
 			dependencies = (
 			);
 			name = SwipeShrinkExample;
-			packageProductDependencies = (
-				C17205F924B8F5680058A6A6 /* SnapKit */,
-			);
 			productName = SwipeShrinkExample;
 			productReference = C17205DF24B8EE3D0058A6A6 /* SwipeShrinkExample.app */;
 			productType = "com.apple.product-type.application";
@@ -119,9 +117,6 @@
 				Base,
 			);
 			mainGroup = C17205D624B8EE3D0058A6A6;
-			packageReferences = (
-				C17205F824B8F5680058A6A6 /* XCRemoteSwiftPackageReference "SnapKit" */,
-			);
 			productRefGroup = C17205E024B8EE3D0058A6A6 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -152,6 +147,7 @@
 			files = (
 				C17205E724B8EE3D0058A6A6 /* ViewController.swift in Sources */,
 				C17205F724B8EE740058A6A6 /* SwipeShrink.swift in Sources */,
+				C17205F924B8EE740058A6A6 /* SwipeShrinkGeometry.swift in Sources */,
 				C17205E324B8EE3D0058A6A6 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -351,24 +347,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		C17205F824B8F5680058A6A6 /* XCRemoteSwiftPackageReference "SnapKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.0.1;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		C17205F924B8F5680058A6A6 /* SnapKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C17205F824B8F5680058A6A6 /* XCRemoteSwiftPackageReference "SnapKit" */;
-			productName = SnapKit;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C17205D724B8EE3D0058A6A6 /* Project object */;
 }
