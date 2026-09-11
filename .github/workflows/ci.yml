@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+env:
+  # Swift 6 language mode requires the Xcode 16 toolchain.
+  DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+
+jobs:
+  test:
+    name: Unit tests (SwiftPM, Swift 6 mode)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show toolchain
+        run: swift --version
+      # `swift test` only builds the test target's dependencies, so build every
+      # target explicitly to type-check the SwiftUI one too.
+      - name: Build all targets
+        run: swift build --build-tests
+      - name: Run tests
+        run: swift test --enable-code-coverage
+
+  build-ios:
+    name: Build for iOS
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build UIKit target
+        run: |
+          xcodebuild build \
+            -scheme SwipeShrink \
+            -destination 'generic/platform=iOS Simulator' \
+            SWIFT_STRICT_CONCURRENCY=complete
+      - name: Build SwiftUI target
+        run: |
+          xcodebuild build \
+            -scheme SwipeShrinkUI \
+            -destination 'generic/platform=iOS Simulator' \
+            SWIFT_STRICT_CONCURRENCY=complete
+
+  build-example:
+    name: Build example app
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      # The project is generated from SwipeShrinkExample/project.yml rather than
+      # checked in, so CI also verifies the spec still produces a valid project.
+      - name: Generate project
+        run: make project
+      - name: Build example
+        run: |
+          xcodebuild build \
+            -project SwipeShrinkExample/SwipeShrinkExample.xcodeproj \
+            -scheme SwipeShrinkExample \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO

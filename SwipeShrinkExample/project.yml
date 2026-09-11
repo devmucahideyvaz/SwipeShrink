@@ -1,0 +1,81 @@
+name: SwipeShrinkExample
+
+options:
+  minimumXcodeGenVersion: "2.38.0"
+  bundleIdPrefix: com.mucahideyvaz
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "13.2"
+  # Keep the generated project out of the way of the sources it references.
+  generateEmptyDirectories: false
+
+# Applied to every target and configuration.
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    CODE_SIGN_STYLE: Automatic
+    # DEVELOPMENT_TEAM is deliberately not pinned here: simulator builds do not
+    # need it, and hard-coding one account's team breaks every other checkout.
+    # Set it in Xcode's Signing & Capabilities to run on a device.
+
+packages:
+  # The library is consumed as a local Swift package rather than by compiling
+  # its sources into the app target, so the example exercises the same
+  # integration path a user gets from SwiftPM.
+  SwipeShrink:
+    path: ..
+
+targets:
+  SwipeShrinkExample:
+    type: application
+    platform: iOS
+
+    sources:
+      - path: SwipeShrinkExample
+        excludes:
+          # Generated from the `info` block below.
+          - Info.plist
+
+    dependencies:
+      - package: SwipeShrink
+        product: SwipeShrink
+      - package: SwipeShrink
+        product: SwipeShrinkUI
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mucahideyvaz.SwipeShrinkExample
+        TARGETED_DEVICE_FAMILY: "1"
+
+    info:
+      path: SwipeShrinkExample/Info.plist
+      properties:
+        CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        LSRequiresIPhoneOS: true
+        UILaunchStoryboardName: LaunchScreen
+        UIMainStoryboardFile: Main
+        # Landscape is enabled so the rotation handling in ViewController and
+        # SwipeShrink.updateLayout(expandedFrame:) is actually reachable.
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+
+schemes:
+  SwipeShrinkExample:
+    build:
+      targets:
+        SwipeShrinkExample: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
