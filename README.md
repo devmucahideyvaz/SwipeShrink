@@ -7,8 +7,9 @@ corner — like the YouTube video player. Tap the mini player to restore it.
 
 ## Requirements
 
-- iOS 11.0+ / tvOS 11.0+
-- Swift 5.3+
+- iOS 13.0+ / tvOS 13.0+
+- Swift 6.0+ (Xcode 16+); builds in Swift 6 language mode with complete strict
+  concurrency checking
 - No third-party dependencies
 
 ## Installation
@@ -122,6 +123,29 @@ immediately.
 | `onStateChange` | Called when the resting state changes. |
 | `geometry` | The `SwipeShrinkGeometry` currently driving the transition. |
 | `invalidate()` | Detaches the gestures and forgets the layout. |
+
+## Concurrency
+
+The package builds in Swift 6 language mode, so complete strict concurrency
+checking is on.
+
+- `SwipeShrink` drives UIKit views and is therefore `@MainActor`-isolated. Call
+  every member from the main actor — which you get for free inside a
+  `UIViewController`, since UIKit is main-actor isolated too. Being
+  global-actor isolated also makes it implicitly `Sendable`.
+- `onStateChange` is invoked on the main actor.
+- `SwipeShrinkGeometry`, `SwipeShrinkConfiguration` and `SwipeShrinkState` are
+  `Sendable` value types with no isolation, so the transition maths can be used
+  from any isolation domain — including off the main actor, and in tests that
+  never touch UIKit.
+
+Calling a member from a non-isolated context needs an ordinary hop:
+
+```swift
+await MainActor.run {
+    shrink.setState(.collapsed)
+}
+```
 
 ## Behaviour notes
 

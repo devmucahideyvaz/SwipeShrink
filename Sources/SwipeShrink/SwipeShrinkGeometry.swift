@@ -3,7 +3,7 @@ import CoreGraphics
 
 /// Tunable values that describe where the collapsed ("mini") view comes to rest
 /// and how the transition animates.
-public struct SwipeShrinkConfiguration: Equatable {
+public struct SwipeShrinkConfiguration: Equatable, Sendable {
     /// Width of the collapsed view as a fraction of the parent's width, before
     /// `horizontalInset` is subtracted. Clamped to `0.1 ... 1.0`.
     public var collapsedWidthRatio: CGFloat
@@ -35,11 +35,13 @@ public struct SwipeShrinkConfiguration: Equatable {
         self.flickVelocityThreshold = flickVelocityThreshold
     }
 
+    /// The stock configuration. Immutable and `Sendable`, so it is safe to
+    /// read from any isolation domain.
     public static let `default` = SwipeShrinkConfiguration()
 }
 
 /// The two resting positions of a swipe-shrink view.
-public enum SwipeShrinkState: Equatable, CaseIterable {
+public enum SwipeShrinkState: Equatable, CaseIterable, Sendable {
     case expanded
     case collapsed
 }
@@ -48,7 +50,7 @@ public enum SwipeShrinkState: Equatable, CaseIterable {
 ///
 /// This type contains no UIKit dependency so the layout maths can be unit
 /// tested on any platform.
-public struct SwipeShrinkGeometry: Equatable {
+public struct SwipeShrinkGeometry: Equatable, Sendable {
     /// Centre of the view in its expanded resting position.
     public let expandedCenter: CGPoint
     /// Size of the view in its expanded resting position.

@@ -27,6 +27,12 @@ import UIKit
 ///   autoresizing mask, not by Auto Layout constraints that pin its position or
 ///   size — a layout pass would otherwise undo the transition. Subviews of the
 ///   managed view may use Auto Layout freely.
+///
+/// - Note: `SwipeShrink` drives UIKit views, so it is `@MainActor`-isolated —
+///   and therefore implicitly `Sendable`. Every member must be reached from the
+///   main actor. The transition maths in `SwipeShrinkGeometry` is `Sendable`
+///   and carries no isolation, so it can be used from any domain.
+@MainActor
 public final class SwipeShrink: NSObject {
 
     // MARK: - Public API
@@ -42,7 +48,8 @@ public final class SwipeShrink: NSObject {
     /// The resting state the view is in, or is currently animating towards.
     public private(set) var state: SwipeShrinkState = .expanded
 
-    /// Called when `state` changes, once the transition into it has finished.
+    /// Called on the main actor when `state` changes, once the transition into
+    /// it has finished.
     public var onStateChange: ((SwipeShrinkState) -> Void)?
 
     /// The geometry currently driving the transition, or `nil` before `prepare`.
@@ -267,8 +274,15 @@ public final class SwipeShrink: NSObject {
                        options: [.beginFromCurrentState, .curveEaseOut],
                        animations: applyTargets,
                        completion: { [weak self] _ in
-                           self?.isAnimating = false
-                           completion?()
+                           // UIKit always runs animation completions on the main
+                           // thread, but the closure is not spelled as
+                           // main-actor-isolated in every SDK version. Asserting
+                           // the isolation keeps this correct under Swift 6
+                           // regardless of how the SDK imports it.
+                           MainActor.assumeIsolated {
+                               self?.isAnimating = false
+                               completion?()
+                           }
                        })
     }
 

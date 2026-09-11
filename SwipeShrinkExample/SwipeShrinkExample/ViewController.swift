@@ -10,7 +10,9 @@ import AVFoundation
 import AVKit
 import UIKit
 
-public class ViewController: UIViewController {
+// `UIViewController` is `@MainActor`-isolated, so this subclass and everything
+// it touches — including `SwipeShrink` — is on the main actor.
+final class ViewController: UIViewController {
     @IBOutlet weak var shrinkedView: UIView!
 
     private let shrink = SwipeShrink()
@@ -19,13 +21,13 @@ public class ViewController: UIViewController {
 
     private var hasPreparedShrink = false
 
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         embedPlayer()
         loadVideo()
     }
 
-    public override func viewDidAppear(_ animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         // `prepare` needs the final laid-out frames, which are only settled by
         // the time the view has appeared. It is idempotent, but there is no
@@ -35,8 +37,8 @@ public class ViewController: UIViewController {
         shrink.prepare(view: shrinkedView, in: view)
     }
 
-    public override func viewWillTransition(to size: CGSize,
-                                            with coordinator: UIViewControllerTransitionCoordinator) {
+    override func viewWillTransition(to size: CGSize,
+                                     with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         coordinator.animate(alongsideTransition: { [weak self] _ in
             guard let self = self else { return }
