@@ -21,6 +21,7 @@ final class ViewController: UIViewController {
     private let playerViewController = AVPlayerViewController()
 
     private var hasPreparedShrink = false
+    private var lastLayoutSize: CGSize = .zero
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,25 +36,32 @@ final class ViewController: UIViewController {
         // reason to redo the work on every appearance.
         guard !hasPreparedShrink else { return }
         hasPreparedShrink = true
+        shrinkedView.frame = expandedPlayerFrame()
         shrink.prepare(view: shrinkedView, in: view)
+        lastLayoutSize = view.bounds.size
     }
 
-    override func viewWillTransition(to size: CGSize,
-                                     with coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransition(to: size, with: coordinator)
-        coordinator.animate(alongsideTransition: { [weak self] _ in
-            guard let self = self else { return }
-            // `shrinkedView` is positioned by a fixed frame in the storyboard,
-            // so hand SwipeShrink the expanded frame for the new size instead
-            // of letting it read a stale one.
-            self.shrink.updateLayout(expandedFrame: self.expandedPlayerFrame(forParentSize: size))
-        })
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        guard hasPreparedShrink else { return }
+        // Recompute only when the parent actually resized, so ordinary layout
+        // passes never snap the view out from under a drag.
+        guard view.bounds.size != lastLayoutSize else { return }
+        lastLayoutSize = view.bounds.size
+        // Both the new size and the new safe-area insets are final here. Doing
+        // this from `viewWillTransition`'s alongside block instead would pair
+        // the post-rotation size with the pre-rotation insets, which differ
+        // between portrait and landscape.
+        shrink.updateLayout(expandedFrame: expandedPlayerFrame())
     }
 
-    /// Full-width, 16:9, tucked under the status bar.
-    private func expandedPlayerFrame(forParentSize size: CGSize) -> CGRect {
-        let top = view.safeAreaInsets.top
-        return CGRect(x: 0, y: top, width: size.width, height: size.width * 9 / 16)
+    /// Full-width, 16:9, tucked under the safe area.
+    private func expandedPlayerFrame() -> CGRect {
+        let width = view.bounds.width
+        return CGRect(x: 0,
+                      y: view.safeAreaInsets.top,
+                      width: width,
+                      height: width * 9 / 16)
     }
 
     private func embedPlayer() {

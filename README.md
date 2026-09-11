@@ -122,6 +122,7 @@ final class ViewController: UIViewController {
     private let playerViewController = AVPlayerViewController()
 
     private var hasPreparedShrink = false
+    private var lastLayoutSize: CGSize = .zero
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -142,21 +143,28 @@ final class ViewController: UIViewController {
         super.viewDidAppear(animated)
         guard !hasPreparedShrink else { return }
         hasPreparedShrink = true
+        shrinkedView.frame = expandedPlayerFrame()
         shrink.prepare(view: shrinkedView, in: view)
+        lastLayoutSize = view.bounds.size
     }
 
-    override func viewWillTransition(to size: CGSize,
-                                     with coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransition(to: size, with: coordinator)
-        coordinator.animate(alongsideTransition: { [weak self] _ in
-            guard let self = self else { return }
-            // Pass an explicit frame when the managed view is positioned by a
-            // fixed frame; omit it when its autoresizing mask keeps it correct.
-            self.shrink.updateLayout(expandedFrame: CGRect(x: 0,
-                                                           y: self.view.safeAreaInsets.top,
-                                                           width: size.width,
-                                                           height: size.width * 9 / 16))
-        })
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        guard hasPreparedShrink else { return }
+        // Recompute only when the parent actually resized, so ordinary layout
+        // passes never snap the view out from under a drag.
+        guard view.bounds.size != lastLayoutSize else { return }
+        lastLayoutSize = view.bounds.size
+        shrink.updateLayout(expandedFrame: expandedPlayerFrame())
+    }
+
+    /// Full-width, 16:9, tucked under the safe area.
+    private func expandedPlayerFrame() -> CGRect {
+        let width = view.bounds.width
+        return CGRect(x: 0,
+                      y: view.safeAreaInsets.top,
+                      width: width,
+                      height: width * 9 / 16)
     }
 }
 ```

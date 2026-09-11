@@ -15,10 +15,11 @@ import UIKit
 ///     shrink.prepare(view: playerContainer, in: view)
 /// }
 ///
-/// override func viewWillTransition(to size: CGSize,
-///                                  with coordinator: UIViewControllerTransitionCoordinator) {
-///     super.viewWillTransition(to: size, with: coordinator)
-///     coordinator.animate(alongsideTransition: { _ in self.shrink.updateLayout() })
+/// override func viewDidLayoutSubviews() {
+///     super.viewDidLayoutSubviews()
+///     guard view.bounds.size != lastLayoutSize else { return }
+///     lastLayoutSize = view.bounds.size
+///     shrink.updateLayout()
 /// }
 /// ```
 ///
@@ -74,6 +75,11 @@ public final class SwipeShrink: NSObject {
     /// it when the parent resizes.
     private var lastParentBounds: CGRect = .zero
     private var isAnimating = false
+    private var isInteracting = false
+
+    /// `true` only when the view is parked at a resting position, so its frame
+    /// can be trusted as the expanded frame.
+    private var isSettled: Bool { !isAnimating && !isInteracting }
 
     // MARK: - Setup
 
@@ -94,6 +100,8 @@ public final class SwipeShrink: NSObject {
         expandedFrame = view.frame
         lastParentBounds = parentView.bounds
         state = .expanded
+        isInteracting = false
+        isAnimating = false
 
         attachGestures(to: view)
         rebuildGeometry()
@@ -102,6 +110,8 @@ public final class SwipeShrink: NSObject {
     /// Removes the gestures installed by `prepare` and forgets the layout.
     public func invalidate() {
         detachGestures()
+        isInteracting = false
+        isAnimating = false
         managedView = nil
         parentView = nil
         geometry = nil
@@ -122,8 +132,12 @@ public final class SwipeShrink: NSObject {
 
         if let newExpandedFrame = newExpandedFrame {
             expandedFrame = newExpandedFrame
-        } else if state == .expanded {
-            // The layout system has already sized the view for us.
+        } else if state == .expanded, isSettled {
+            // The layout system has already sized the view for us. Only trust
+            // `view.frame` while the view is parked: mid-drag and mid-animation
+            // `state` still reads `.expanded` even though the frame is a
+            // transient in-between one, and adopting that would permanently
+            // shrink the expanded resting size.
             expandedFrame = view.frame
         } else {
             expandedFrame = rescaledExpandedFrame(into: parentBounds)
@@ -192,6 +206,7 @@ public final class SwipeShrink: NSObject {
 
         switch recognizer.state {
         case .began, .changed:
+            isInteracting = true
             let translation = recognizer.translation(in: parent)
             // Clamp instead of forcing the gesture into `.ended`, so the view
             // simply stops at the boundary and the gesture stays live.
@@ -201,6 +216,7 @@ public final class SwipeShrink: NSObject {
             recognizer.setTranslation(.zero, in: parent)
 
         case .ended, .cancelled, .failed:
+            isInteracting = false
             let velocityY = recognizer.state == .ended
                 ? recognizer.velocity(in: parent).y
                 : 0
