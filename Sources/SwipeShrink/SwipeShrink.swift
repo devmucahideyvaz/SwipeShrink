@@ -76,6 +76,9 @@ public final class SwipeShrink: NSObject {
     private var lastParentBounds: CGRect = .zero
     private var isAnimating = false
     private var isInteracting = false
+    /// Bumped for every animated transition, so a superseded animation's
+    /// completion can tell it is no longer the one in flight.
+    private var animationGeneration = 0
 
     /// `true` only when the view is parked at a resting position, so its frame
     /// can be trusted as the expanded frame.
@@ -157,8 +160,10 @@ public final class SwipeShrink: NSObject {
         let didChange = newState != state
         state = newState
         applyState(newState, animated: animated) { [weak self] in
-            if didChange {
-                self?.onStateChange?(newState)
+            // A later `setState` may have retargeted the view before this
+            // transition finished; only report a state the view still holds.
+            if didChange, let self = self, self.state == newState {
+                self.onStateChange?(newState)
             }
             completion?()
         }
@@ -285,6 +290,8 @@ public final class SwipeShrink: NSObject {
         }
 
         isAnimating = true
+        animationGeneration += 1
+        let generation = animationGeneration
         UIView.animate(withDuration: configuration.animationDuration,
                        delay: 0,
                        options: [.beginFromCurrentState, .curveEaseOut],
@@ -296,7 +303,13 @@ public final class SwipeShrink: NSObject {
                            // the isolation keeps this correct under Swift 6
                            // regardless of how the SDK imports it.
                            MainActor.assumeIsolated {
-                               self?.isAnimating = false
+                               // A newer transition started from this one's
+                               // current state is still running; leave the flag
+                               // set so gestures and `updateLayout` keep
+                               // treating the view as in flight.
+                               if let self = self, self.animationGeneration == generation {
+                                   self.isAnimating = false
+                               }
                                completion?()
                            }
                        })

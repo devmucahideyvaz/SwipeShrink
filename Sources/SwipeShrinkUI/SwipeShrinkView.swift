@@ -59,7 +59,10 @@ public struct SwipeShrinkView<Content: View>: View {
     private let content: (SwipeShrinkProxy) -> Content
 
     /// Non-`nil` only while a drag is in flight; otherwise `state` decides.
-    @State private var dragProgress: CGFloat?
+    /// `@GestureState` resets itself when the drag ends *or is cancelled* —
+    /// `onEnded` is not called on cancellation, so a plain `@State` would leave
+    /// the view frozen mid-transition.
+    @GestureState private var dragProgress: CGFloat?
 
     /// - Parameters:
     ///   - state: The resting state, owned by the caller so the transition can
@@ -77,6 +80,12 @@ public struct SwipeShrinkView<Content: View>: View {
         self.configuration = configuration
         self.expandedFrame = expandedFrame
         self.content = content
+        // Animate the reset, so a cancelled drag settles back to the resting
+        // position instead of jumping, matching the `onEnded` animation.
+        self._dragProgress = GestureState(
+            initialValue: nil,
+            resetTransaction: Transaction(animation: .easeOut(duration: configuration.animationDuration))
+        )
     }
 
     public var body: some View {
@@ -127,24 +136,21 @@ public struct SwipeShrinkView<Content: View>: View {
 
     private func dragGesture(for geometry: SwipeShrinkGeometry) -> some Gesture {
         DragGesture(minimumDistance: 8)
-            .onChanged { value in
+            .updating($dragProgress) { value, dragProgress, _ in
                 guard geometry.isValid else { return }
                 let targetCenterY = centerY(forTranslation: value.translation.height,
                                             geometry: geometry)
                 dragProgress = geometry.progress(forCenterY: targetCenterY)
             }
             .onEnded { value in
-                guard geometry.isValid else {
-                    dragProgress = nil
-                    return
-                }
+                // `dragProgress` resets on its own once the gesture finishes.
+                guard geometry.isValid else { return }
                 let targetCenterY = centerY(forTranslation: value.translation.height,
                                             geometry: geometry)
                 let resting = geometry.restingState(forCenterY: targetCenterY,
                                                     velocityY: verticalVelocity(of: value),
                                                     configuration: configuration)
                 withAnimation(.easeOut(duration: configuration.animationDuration)) {
-                    dragProgress = nil
                     state = resting
                 }
             }
