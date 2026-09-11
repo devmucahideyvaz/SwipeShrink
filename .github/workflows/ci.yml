@@ -47,6 +47,12 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      # The project is generated from SwipeShrinkExample/project.yml rather than
+      # checked in, so CI also verifies the spec still produces a valid project.
+      - name: Generate project
+        run: make project
       - name: Build example
         run: |
           xcodebuild build \

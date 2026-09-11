@@ -8,6 +8,7 @@
 
 import AVFoundation
 import AVKit
+import SwipeShrink
 import UIKit
 
 // `UIViewController` is `@MainActor`-isolated, so this subclass and everything

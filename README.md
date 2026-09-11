@@ -249,9 +249,37 @@ undo the transition. Subviews of the managed view may use Auto Layout freely.
 
 ## Example
 
-Open `SwipeShrinkExample/SwipeShrinkExample.xcodeproj` and run — it demonstrates
-the UIKit API with an `AVPlayerViewController`. The SwiftUI view ships with an
-Xcode preview in `Sources/SwipeShrinkUI/SwipeShrinkView.swift`.
+The example project is **generated with [XcodeGen](https://github.com/yonaskolb/XcodeGen)**
+from `SwipeShrinkExample/project.yml`, so the `.xcodeproj` is not checked in —
+no more pbxproj merge conflicts.
+
+```sh
+brew install xcodegen
+make project
+open SwipeShrinkExample/SwipeShrinkExample.xcodeproj
+```
+
+It demonstrates the UIKit API with an `AVPlayerViewController`, and consumes the
+library as a local Swift package so the example exercises the same integration
+path a user gets from SwiftPM. The SwiftUI view ships with an Xcode preview in
+`Sources/SwipeShrinkUI/SwipeShrinkView.swift`.
+
+Everything the project needs — targets, build settings, the scheme, the package
+dependency and the `Info.plist` contents — lives in `project.yml`. Change it
+there and re-run `make project`.
+
+`DEVELOPMENT_TEAM` is deliberately not pinned in the spec: simulator builds do
+not need it, and hard-coding one account's team breaks every other checkout. Set
+it in Xcode's Signing & Capabilities to run on a device.
+
+### Make targets
+
+| Target | Description |
+| --- | --- |
+| `make project` | Generate the example `.xcodeproj` from `project.yml` |
+| `make build` | Build every SwiftPM target, test targets included |
+| `make test` | Run the unit tests |
+| `make clean` | Remove build artefacts and the generated project |
 
 ## Tests
 
