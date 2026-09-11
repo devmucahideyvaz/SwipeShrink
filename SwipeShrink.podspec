@@ -14,6 +14,18 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = '13.0'
   s.tvos.deployment_target = '13.0'
   s.swift_versions   = ['6.0']
-  s.source_files     = 'Sources/SwipeShrink/**/*.swift'
-  s.frameworks       = 'UIKit'
+  s.default_subspecs = ['Core']
+
+  # The UIKit driver and the shared geometry.
+  s.subspec 'Core' do |core|
+    core.source_files = 'Sources/SwipeShrink/**/*.swift'
+    core.frameworks   = 'UIKit'
+  end
+
+  # The SwiftUI view, on top of the same geometry.
+  s.subspec 'SwiftUI' do |swiftui|
+    swiftui.source_files = 'Sources/SwipeShrinkUI/**/*.swift'
+    swiftui.frameworks   = 'SwiftUI'
+    swiftui.dependency 'SwipeShrink/Core'
+  end
 end

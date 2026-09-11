@@ -11,10 +11,17 @@ let package = Package(
         .macOS(.v10_15)
     ],
     products: [
-        .library(name: "SwipeShrink", targets: ["SwipeShrink"])
+        // The UIKit driver, plus the shared geometry.
+        .library(name: "SwipeShrink", targets: ["SwipeShrink"]),
+        // The SwiftUI view. Depends on the same geometry, so the two
+        // implementations cannot drift apart.
+        .library(name: "SwipeShrinkUI", targets: ["SwipeShrinkUI"])
     ],
     targets: [
         .target(name: "SwipeShrink", path: "Sources/SwipeShrink"),
+        .target(name: "SwipeShrinkUI",
+                dependencies: ["SwipeShrink"],
+                path: "Sources/SwipeShrinkUI"),
         .testTarget(name: "SwipeShrinkTests",
                     dependencies: ["SwipeShrink"],
                     path: "Tests/SwipeShrinkTests")

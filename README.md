@@ -3,6 +3,15 @@
 Swipe a view down to shrink it into a mini player docked in the bottom-trailing
 corner — like the YouTube video player. Tap the mini player to restore it.
 
+Ships as two products over one shared, unit-tested transition model:
+
+| Product | Use it from |
+| --- | --- |
+| `SwipeShrink` | UIKit — drives an existing `UIView` |
+| `SwipeShrinkUI` | SwiftUI — the `SwipeShrinkView` container |
+
+Both are driven by the same `SwipeShrinkGeometry`, so they cannot drift apart.
+
 ![](swipe_shrink.gif)
 
 ## Requirements
@@ -28,15 +37,76 @@ dependencies: [
 ### CocoaPods
 
 ```ruby
-pod 'SwipeShrink'
+pod 'SwipeShrink'            # UIKit
+pod 'SwipeShrink/SwiftUI'    # SwiftUI
 ```
 
 ### Manually
 
-Copy `Sources/SwipeShrink/SwipeShrink.swift` and
-`Sources/SwipeShrink/SwipeShrinkGeometry.swift` into your project.
+Copy the contents of `Sources/SwipeShrink/` into your project, plus
+`Sources/SwipeShrinkUI/` if you want the SwiftUI view.
 
-## Usage
+## SwiftUI usage
+
+`SwipeShrinkView` fills the space it is offered and positions its content
+inside it, so give it the area the content should travel across — usually the
+top layer of a `ZStack`:
+
+```swift
+import SwipeShrink
+import SwipeShrinkUI
+import SwiftUI
+
+struct ContentView: View {
+    @State private var playerState: SwipeShrinkState = .expanded
+
+    var body: some View {
+        ZStack {
+            FeedList()
+
+            SwipeShrinkView(state: $playerState) { proxy in
+                VideoPlayer(player: player)
+                    .overlay(proxy.isCollapsed ? CloseButton() : nil,
+                             alignment: .topTrailing)
+            }
+        }
+    }
+}
+```
+
+`state` is a binding, so the transition can also be driven programmatically:
+
+```swift
+withAnimation { playerState = .collapsed }
+```
+
+The closure is handed a `SwipeShrinkProxy` describing the transition as it
+runs:
+
+| Member | Description |
+| --- | --- |
+| `state` | The resting state the view is in, or animating towards |
+| `progress` | `0` expanded … `1` collapsed, interpolated during a drag |
+| `isExpanded` / `isCollapsed` | Convenience checks |
+
+Where UIKit reads a laid-out frame, SwiftUI has none until layout runs, so the
+expanded frame is described declaratively with `SwipeShrinkExpandedFrame`:
+
+```swift
+SwipeShrinkView(
+    state: $playerState,
+    expandedFrame: SwipeShrinkExpandedFrame(widthRatio: 1,
+                                            aspectRatio: 9 / 16,
+                                            topInset: 44)
+) { _ in
+    VideoPlayer(player: player)
+}
+```
+
+Rotation and split-view resizes need no handling: the `GeometryReader` re-reads
+the available space and the geometry is rebuilt on every layout.
+
+## UIKit usage
 
 ```swift
 import AVFoundation
@@ -111,7 +181,7 @@ let shrink = SwipeShrink(configuration: configuration)
 Assigning `shrink.configuration` after `prepare` re-derives the layout
 immediately.
 
-## API
+## UIKit API
 
 | Member | Description |
 | --- | --- |
@@ -134,10 +204,12 @@ checking is on.
   `UIViewController`, since UIKit is main-actor isolated too. Being
   global-actor isolated also makes it implicitly `Sendable`.
 - `onStateChange` is invoked on the main actor.
-- `SwipeShrinkGeometry`, `SwipeShrinkConfiguration` and `SwipeShrinkState` are
-  `Sendable` value types with no isolation, so the transition maths can be used
-  from any isolation domain — including off the main actor, and in tests that
-  never touch UIKit.
+- `SwipeShrinkGeometry`, `SwipeShrinkConfiguration`, `SwipeShrinkState` and
+  `SwipeShrinkExpandedFrame` are `Sendable` value types with no isolation, so
+  the transition maths can be used from any isolation domain — including off the
+  main actor, and in tests that never touch UIKit.
+- `SwipeShrinkView` and `SwipeShrinkProxy` follow SwiftUI's own model:
+  the view is `@MainActor`-isolated, the proxy is a `Sendable` value.
 
 Calling a member from a non-isolated context needs an ordinary hop:
 
@@ -163,16 +235,23 @@ await MainActor.run {
   `AVPlayerViewController`'s transport controls keep working. The tap gesture
   only activates while collapsed.
 
-## Layout requirements
+These hold for both products — they are properties of the shared
+`SwipeShrinkGeometry`, not of either renderer.
 
-SwipeShrink positions the managed view by writing to its `bounds` and `center`.
+## Layout requirements (UIKit only)
+
+`SwipeShrink` positions the managed view by writing to its `bounds` and `center`.
 The view must therefore be laid out by its autoresizing mask, **not** by Auto
 Layout constraints that pin its position or size — a layout pass would otherwise
 undo the transition. Subviews of the managed view may use Auto Layout freely.
 
+`SwipeShrinkView` has no such restriction — it lays its content out itself.
+
 ## Example
 
-Open `SwipeShrinkExample/SwipeShrinkExample.xcodeproj` and run.
+Open `SwipeShrinkExample/SwipeShrinkExample.xcodeproj` and run — it demonstrates
+the UIKit API with an `AVPlayerViewController`. The SwiftUI view ships with an
+Xcode preview in `Sources/SwipeShrinkUI/SwipeShrinkView.swift`.
 
 ## Tests
 
