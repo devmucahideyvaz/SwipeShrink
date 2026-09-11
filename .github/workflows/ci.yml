@@ -5,16 +5,19 @@ on:
     branches: [master]
   pull_request:
 
-env:
-  # Swift 6 language mode requires the Xcode 16 toolchain.
-  DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+# The runner's default Xcode is used on purpose. Pinning a non-default one
+# (Xcode_16.2 was pinned before) is fragile: the image ships the iOS platform
+# only for its default Xcode, so iOS destinations failed with
+# "iOS 18.2 is not installed". Every macOS 15 image defaults to Xcode 16 or
+# later, which is what Swift 6 language mode requires.
 
 jobs:
   test:
     name: Unit tests (SwiftPM, Swift 6 mode)
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      # v5 runs on Node.js 24; v4 targets the deprecated Node.js 20.
+      - uses: actions/checkout@v5
       - name: Show toolchain
         run: swift --version
       # `swift test` only builds the test target's dependencies, so build every
@@ -28,7 +31,10 @@ jobs:
     name: Build for iOS
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      # v5 runs on Node.js 24; v4 targets the deprecated Node.js 20.
+      - uses: actions/checkout@v5
+      - name: Show toolchain
+        run: xcodebuild -version && xcodebuild -showsdks
       - name: Build UIKit target
         run: |
           xcodebuild build \
@@ -46,7 +52,10 @@ jobs:
     name: Build example app
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      # v5 runs on Node.js 24; v4 targets the deprecated Node.js 20.
+      - uses: actions/checkout@v5
+      - name: Show toolchain
+        run: xcodebuild -version && xcodebuild -showsdks
       - name: Install XcodeGen
         run: brew install xcodegen
       # The project is generated from SwipeShrinkExample/project.yml rather than
